@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Inline&display=swap" rel="stylesheet">
@@ -18,159 +15,159 @@
 
     <script id="vs-shadowmap" type="x-shader/x-vertex">#version 300 es
  
-        uniform mat4 uMVMatrix;
-        uniform mat4 uPMatrix;
-        
-        in vec3 aVertexPosition;
-        
-        out vec4 vPosition;
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+			
+			in vec3 aVertexPosition;
+			
+			out vec4 vPosition;
 
-        void main() {
-            vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
-            gl_Position = uPMatrix * vPosition;
-        }
-    </script>
+			void main() {
+				vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+                gl_Position = uPMatrix * vPosition;
+			}
+		</script>
 
-<script id="fs-shadowmap" type="x-shader/x-fragment">#version 300 es
+    <script id="fs-shadowmap" type="x-shader/x-fragment">#version 300 es
+ 
+			precision mediump int;
+			precision mediump float;
+			
+			in vec4 vPosition;
+			out vec4 fragColor;
 
-        precision mediump int;
-        precision mediump float;
-        
-        in vec4 vPosition;
-        out vec4 fragColor;
+			uniform vec3 uPointLightingLocation;
+			uniform float uFarPlane;
 
-        uniform vec3 uPointLightingLocation;
-        uniform float uFarPlane;
+			void main() {
+			  // get distance between fragment and light source
+			  float lightDistance = length(vPosition.xyz - uPointLightingLocation);
+			  
+			  // map to [0;1] range by dividing by far_plane
+			  lightDistance = lightDistance / uFarPlane;
+			  
+			  // write this as modified depth
+			  fragColor = vec4(lightDistance, 0.0, 0.0, 1.0);
+			  
+			}
+		</script>
 
-        void main() {
-          // get distance between fragment and light source
-          float lightDistance = length(vPosition.xyz - uPointLightingLocation);
-          
-          // map to [0;1] range by dividing by far_plane
-          lightDistance = lightDistance / uFarPlane;
-          
-          // write this as modified depth
-          fragColor = vec4(lightDistance, 0.0, 0.0, 1.0);
-          
-        }
-    </script>
-
-<script id="vs" type="x-shader/x-vertex">#version 300 es
-
-        in vec3 aVertexPosition;
-        in vec3 aVertexNormal;
-        
-        uniform mat4 uMVMatrix;
-        uniform mat4 uPMatrix;
-        uniform mat3 uNMatrix;
-        
-        in  vec2 vTexCoord;
-
-        out vec2 fTexCoord;
-        out vec3 vTransformedNormal;
-        out vec4 vPosition;
-        
-        void main(void) {
-            vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
-            gl_Position = uPMatrix * vPosition;
-            fTexCoord = vTexCoord;
-            vTransformedNormal = uNMatrix * aVertexNormal;
-        }
-    </script>
-
-<script id="fs" type="x-shader/x-fragment">#version 300 es
-        
-        precision mediump float;
-        
-        in vec2 fTexCoord;
-        in vec3 vTransformedNormal;
-        in vec4 vPosition;
-        in vec4 vVertexRelativeToLight;
-        
-        out vec4 fragColor;
-
-        uniform vec3 uMaterialAmbientColor;
-        uniform vec3 uMaterialDiffuseColor;
-        uniform vec3 uMaterialSpecularColor;
-        uniform float uMaterialShininess;
-        uniform float uFarPlane;
-        
-        uniform vec3 uAmbientColor;
-        
-        uniform vec3 uPointLightingLocation;
-        uniform vec3 uPointLightingSpecularColor;
-        uniform vec3 uPointLightingDiffuseColor;
-        
-        uniform bool uUseLighting;
-        uniform bool uUseMaterial;
-        uniform bool uUseTexture;
-        
-        uniform sampler2D thetexture;
-        uniform samplerCube shadowmap;
-        
-        bool in_shadow(void) {
-            vec3 fragToLight = vPosition.xyz - uPointLightingLocation; 
-            float closestDepth = texture(shadowmap, fragToLight).x;
-            closestDepth *= uFarPlane;
-            float currentDepth = length(fragToLight);
-            // now test for shadows
-            float bias = 0.3; 
-            return (currentDepth -  bias > closestDepth);
-        }
-
-        void main(void) {
+    <script id="vs" type="x-shader/x-vertex">#version 300 es
+ 
+            in vec3 aVertexPosition;
+            in vec3 aVertexNormal;
             
-            vec3 materialAmbientColor = vec3(1.0, 1.0, 1.0);
-            vec3 materialDiffuseColor = vec3(1.0, 1.0, 1.0);
-            vec3 materialSpecularColor = vec3(1.0, 1.0, 1.0);
-            if(uUseMaterial) {
-                materialAmbientColor = uMaterialAmbientColor;
-                materialDiffuseColor = uMaterialDiffuseColor;
-                materialSpecularColor = uMaterialSpecularColor;
+            uniform mat4 uMVMatrix;
+            uniform mat4 uPMatrix;
+            uniform mat3 uNMatrix;
+            
+            in  vec2 vTexCoord;
+
+            out vec2 fTexCoord;
+            out vec3 vTransformedNormal;
+            out vec4 vPosition;
+            
+            void main(void) {
+                vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+                gl_Position = uPMatrix * vPosition;
+                fTexCoord = vTexCoord;
+                vTransformedNormal = uNMatrix * aVertexNormal;
             }
+        </script>
+
+    <script id="fs" type="x-shader/x-fragment">#version 300 es
             
-            float alpha = 1.0;
+            precision mediump float;
             
-            if(uUseTexture) {
-                vec4 textureColor = texture(thetexture, vec2(fTexCoord.s, fTexCoord.t));
-                materialAmbientColor = materialAmbientColor * textureColor.rgb;
-                materialDiffuseColor = materialDiffuseColor * textureColor.rgb;
-                alpha = textureColor.a;
+            in vec2 fTexCoord;
+            in vec3 vTransformedNormal;
+            in vec4 vPosition;
+			in vec4 vVertexRelativeToLight;
+			
+            out vec4 fragColor;
+
+            uniform vec3 uMaterialAmbientColor;
+            uniform vec3 uMaterialDiffuseColor;
+            uniform vec3 uMaterialSpecularColor;
+            uniform float uMaterialShininess;
+            uniform float uFarPlane;
+            
+            uniform vec3 uAmbientColor;
+            
+            uniform vec3 uPointLightingLocation;
+            uniform vec3 uPointLightingSpecularColor;
+            uniform vec3 uPointLightingDiffuseColor;
+            
+            uniform bool uUseLighting;
+            uniform bool uUseMaterial;
+            uniform bool uUseTexture;
+            
+            uniform sampler2D thetexture;
+            uniform samplerCube shadowmap;
+            
+			bool in_shadow(void) {
+				vec3 fragToLight = vPosition.xyz - uPointLightingLocation; 
+				float closestDepth = texture(shadowmap, fragToLight).x;
+				closestDepth *= uFarPlane;
+				float currentDepth = length(fragToLight);
+				// now test for shadows
+				float bias = 0.3; 
+				return (currentDepth -  bias > closestDepth);
+			}
+
+            void main(void) {
+				
+                vec3 materialAmbientColor = vec3(1.0, 1.0, 1.0);
+                vec3 materialDiffuseColor = vec3(1.0, 1.0, 1.0);
+                vec3 materialSpecularColor = vec3(1.0, 1.0, 1.0);
+                if(uUseMaterial) {
+					materialAmbientColor = uMaterialAmbientColor;
+					materialDiffuseColor = uMaterialDiffuseColor;
+					materialSpecularColor = uMaterialSpecularColor;
+				}
+                
+                float alpha = 1.0;
+                
+                if(uUseTexture) {
+					vec4 textureColor = texture(thetexture, vec2(fTexCoord.s, fTexCoord.t));
+					materialAmbientColor = materialAmbientColor * textureColor.rgb;
+					materialDiffuseColor = materialDiffuseColor * textureColor.rgb;
+					alpha = textureColor.a;
+				}
+                
+                vec3 ambientLightWeighting = uAmbientColor;
+                
+                
+                if(uUseLighting) {
+					
+					vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
+					vec3 normal = normalize(vTransformedNormal);
+					
+					vec3 specularLightWeighting = vec3(0.0, 0.0, 0.0);
+					vec3 eyeDirection = normalize(-vPosition.xyz);
+					vec3 reflectionDirection = reflect(-lightDirection, normal);
+					
+					float specularLightBrightness = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+					specularLightWeighting = uPointLightingSpecularColor * specularLightBrightness;
+					
+					float diffuseLightBrightness = max(dot(normal, lightDirection), 0.0);
+					vec3 diffuseLightWeighting = uPointLightingDiffuseColor * diffuseLightBrightness;
+					
+					if(in_shadow()) {
+						diffuseLightWeighting = vec3(0.0, 0.0, 0.0);
+						specularLightWeighting = vec3(0.0, 0.0, 0.0);
+					}
+					
+					fragColor = vec4(materialAmbientColor * ambientLightWeighting
+					  + materialDiffuseColor * diffuseLightWeighting
+					  + materialSpecularColor * specularLightWeighting,
+					  alpha);
+				} else {
+					fragColor = vec4(materialAmbientColor  * ambientLightWeighting, alpha);
+				}
+				
             }
-            
-            vec3 ambientLightWeighting = uAmbientColor;
-            
-            
-            if(uUseLighting) {
-                
-                vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
-                vec3 normal = normalize(vTransformedNormal);
-                
-                vec3 specularLightWeighting = vec3(0.0, 0.0, 0.0);
-                vec3 eyeDirection = normalize(-vPosition.xyz);
-                vec3 reflectionDirection = reflect(-lightDirection, normal);
-                
-                float specularLightBrightness = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
-                specularLightWeighting = uPointLightingSpecularColor * specularLightBrightness;
-                
-                float diffuseLightBrightness = max(dot(normal, lightDirection), 0.0);
-                vec3 diffuseLightWeighting = uPointLightingDiffuseColor * diffuseLightBrightness;
-                
-                if(in_shadow()) {
-                    diffuseLightWeighting = vec3(0.0, 0.0, 0.0);
-                    specularLightWeighting = vec3(0.0, 0.0, 0.0);
-                }
-                
-                fragColor = vec4(materialAmbientColor * ambientLightWeighting
-                  + materialDiffuseColor * diffuseLightWeighting
-                  + materialSpecularColor * specularLightWeighting,
-                  alpha);
-            } else {
-                fragColor = vec4(materialAmbientColor  * ambientLightWeighting, alpha);
-            }
-            
-        }
-    </script>
+        </script>
 
     <script type="text/javascript" src='js/Ostrich.js'></script>
     <script type="text/javascript" src='js/giraffe.js'></script>
@@ -202,10 +199,27 @@
                         <!-- <li class="nav-item">
                             <input type="checkbox" id="animation" checked /> Demo mode <br />
                         </li> -->
-                        <input type="checkbox" id="animation" checked /> Use animation<br />
-                        <input type="checkbox" id="lighting" checked /> Use lighting<br />
-                        <input type="checkbox" id="texture" checked /> Use texture<br />
-                        <input type="checkbox" id="wireframe" /> Use wireframe view<br />
+                        <li>
+                            <div class="container text-center rounded shadow-md">
+                                <div class="row">
+                                    <div class="col">
+                                        <input type="checkbox" id="animation" checked /> Use animation<br />
+                                    </div>
+                                    <div class="col">
+                                        <input type="checkbox" id="lighting" checked /> Use lighting<br />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <input type="checkbox" id="texture" checked /> Use texture<br />
+                                    </div>
+                                    <div class="col">
+                                        <input type="checkbox" id="wireframe" /> Use wireframe view<br />
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        
 
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
@@ -281,81 +295,101 @@
                                 aria-expanded="false" data-bs-auto-close="false">
                                 Camera View Control
                             </a>
-                            <div>
-                                <select class="form-control form-control-sm" id="camera-material">
-                                    <option value="default">Default View</option>
-                                    <option value="giraffe">Giraffe View</option>
-                                </select>
-                            </div>
+
+                            <ul class="dropdown-menu shadow-sm">
+                                <li>
+                                    <div>
+                                        <select class="form-control form-control-sm" id="camera-select">
+                                            <option value="default">Default View</option>
+                                            <option value="giraffe">Giraffe View</option>
+                                        </select>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2 mt-2">
+                                        <div class="flex-none pr-2">eye-x</div><input type="range" min="-100" max="100"
+                                            value="0" id="eyePosition1" class="range range-sm range-accent" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2">
+                                        <div class="flex-none pr-2">eye-y</div><input type="range" min="-50" max="50"
+                                            value="0" id="eyePosition2" class="range range-sm range-accent" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2">
+                                        <div class="flex-none pr-2">eye-z</div><input type="range" min="-300" max="300"
+                                            value="100" id="eyePosition3" class="range range-sm range-accent" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2 mt-2">
+                                        <div class="flex-none pr-2">center-x</div><input type="range" min="-100"
+                                            max="100" value="0" id="centerPosition1"
+                                            class="range range-sm range-secondary" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2">
+                                        <div class="flex-none pr-2">center-y</div><input type="range" min="-100"
+                                            max="100" value="0" id="centerPosition2"
+                                            class="range range-sm range-secondary" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2">
+                                        <div class="flex-none pr-2">center-z</div><input type="range" min="-100"
+                                            max="100" value="-100" id="centerPosition3"
+                                            class="range range-sm range-secondary" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2 mt-2">
+                                        <div class="flex-none pr-2">up-x</div><input type="range" min="-10" max="10"
+                                            value="0" id="upPosition1" class="range range-sm" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2">
+                                        <div class="flex-none pr-2">up-y</div><input type="range" min="-10" max="10"
+                                            value="1" id="upPosition2" class="range range-sm" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex gap-2">
+                                        <div class="flex-none pr-2">up-z</div><input type="range" min="-10" max="10"
+                                            value="0" id="upPosition3" class="range range-sm" />
+                                    </div>
+                                </li>
+                            </ul>
                         </li>
 
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                                 aria-expanded="false" data-bs-auto-close="false">
-                                Ostrich
+                                Ostrich Movement
                             </a>
                             <ul class="dropdown-menu shadow-sm">
                                 <li>
                                     <div>
-                                        Arm Rotation <br />
-                                        <input class="form-range pe-3" type="range" min="0" max="360" value="0"
-                                            class="slider" id="baseArmRotationSlider" disabled>
+                                        Body Rotation <br />
+                                        <input id="ostrichBaseAngle" type="range" min="0" max="360"
+                                        value="0" class="range range-accent" />
                                     </div>
                                 </li>
                                 <li>
                                     <div>
-                                        Second Arm Rotation<br />
-                                        <input type="range" min="0" max="90" value="0" class="slider"
-                                            id="secondArmRotationSlider" disabled>
+                                        Head Rotation<br />
+                                        <input id="ostrichHeadAngle" type="range" min="-45"
+                                        max="45" value="0" class="range range-accent" />
                                     </div>
                                 </li>
                                 <li>
                                     <div>
-                                        Palm Rotation<br />
-                                        <input type="range" min="0" max="360" value="0" class="slider"
-                                            id="palmRotationSlider" disabled>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        First Finger (Base) Rotation<br />
-                                        <input type="range" min="-45" max="23" value="0" class="slider"
-                                            id="firstFingerBaseRotationSlider" disabled>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        First Finger (Top) Rotation<br />
-                                        <input type="range" min="0" max="23" value="0" class="slider"
-                                            id="firstFingerTopRotationSlider" disabled>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        Second Finger (Base) Rotation<br />
-                                        <input type="range" min="-45" max="23" value="0" class="slider"
-                                            id="secondFingerBaseRotationSlider" disabled>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        Second Finger (Top) Rotation<br />
-                                        <input type="range" min="0" max="23" value="0" class="slider"
-                                            id="secondFingerTopRotationSlider" disabled>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        Third Finger (Base) Rotation<br />
-                                        <input type="range" min="-45" max="23" value="0" class="slider"
-                                            id="thirdFingerBaseRotationSlider" disabled>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        Third Finger (Top) Rotation<br />
-                                        <input type="range" min="0" max="23" value="0" class="slider"
-                                            id="thirdFingerTopRotationSlider" disabled>
+                                        Wing Rotation<br />
+                                        <div class="pr-2">wings</div><input id="ostrichWingAngle" type="range" min="0" max="45"
+                                        value="0" class="range range-accent" />
                                     </div>
                                 </li>
                             </ul>
@@ -363,56 +397,71 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                                 aria-expanded="false" data-bs-auto-close="false">
-                                Camera
+                                Lion Movement
                             </a>
                             <ul class="dropdown-menu">
-                                <div>
-                                    Camera Rotation<br />
-                                    <input type="range" min="0" max="360" value="0" class="slider"
-                                        id="baseCameraRotationSlider" disabled>
-                                </div>
-                                <div>
-                                    First Tripod Leg Rotation<br />
-                                    <input type="range" min="0" max="45" value="0" class="slider"
-                                        id="firstCameraLegRotationSlider" disabled>
-                                </div>
-                                <div>
-                                    Second Tripod Leg Rotation<br />
-                                    <input type="range" min="0" max="45" value="0" class="slider"
-                                        id="secondCameraLegRotationSlider" disabled>
-                                </div>
-                                <div>
-                                    Third Tripod Leg Rotation<br />
-                                    <input type="range" min="0" max="45" value="0" class="slider"
-                                        id="thirdCameraLegRotationSlider" disabled>
-                                </div>
-                                <div>
-                                    Camera First Zooming Layer Translation<br />
-                                    <input type="range" min="5" max="30" value="0" class="slider"
-                                        id="secondCameraBodyTranslationSlider" disabled>
-                                </div>
-                                <div>
-                                    Camera Second Zooming Layer Translation<br />
-                                    <input type="range" min="5" max="20" value="0" class="slider"
-                                        id="thirdCameraBodyTranslationSlider" disabled>
-                                </div>
-                                <div>
-                                    Camera Third Zooming Layer Translation<br />
-                                    <input type="range" min="5" max="20" value="0" class="slider"
-                                        id="fourthCameraBodyTranslationSlider" disabled>
-                                </div>
-                                <div>
-                                    Camera Lens Translation<br />
-                                    <input type="range" min="5" max="25" value="0" class="slider"
-                                        id="lensCameraTranslationSlider" disabled>
-                                </div>
-                                <div>
-                                    Camera Shutter Translation<br />
-                                    <input type="range" min="45" max="55" value="0" class="slider"
-                                        id="shutterCameraTranslationSlider" disabled>
-                                </div>
+                                <li>
+                                    <div>
+                                        Body Rotation <br />
+                                        <input id="baseLionAngle" type="range" min="0" max="360"
+                                        value="0" class="range range-accent" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div>
+                                        Ears Rotation<br />
+                                        <input id="lionEarAngle" type="range" min="-45"
+                                        max="45" value="0" class="range range-accent" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div>
+                                        Tail Rotation<br />
+                                        <div class="pr-2">wings</div><input id="lionTailAngle" type="range" min="0" max="45"
+                                        value="0" class="range range-accent" />
+                                    </div>
+                                </li>
                             </ul>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false" data-bs-auto-close="false">
+                                Giraffe Movement
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <div>
+                                        Body Rotation <br />
+                                        <input id="baseGiraffeAngle" type="range" min="0" max="360"
+                                        value="0" class="range range-accent" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div>
+                                        Ears Rotation<br />
+                                        <input id="giraffeEarAngle" type="range" min="-45"
+                                        max="45" value="0" class="range range-accent" />
+                                    </div>
+                                </li>
+                                <li>
+                                    <div>
+                                        Tail Rotation<br />
+                                        <div class="pr-2">wings</div><input id="giraffeTailAngle" type="range" min="0" max="45"
+                                        value="0" class="range range-accent" />
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                        <div>
+                            <h5>Cube Control</h5>
+                            <input id="baseCubeAngle" type="range" min="0" max="360"
+                                        value="0" class="range range-accent" />
+                        </div>
+                        <div>
+                            <h5>Box Control</h5>
+                            <input id="baseBoxAngle" type="range" min="0" max="360"
+                            value="0" class="range range-accent" />
+                        </div>
                     </ul>
                 </div>
             </div>
@@ -450,7 +499,7 @@
     </div>
     <!-- CANVAS -->
     <div class="canvas-container">
-        <canvas id="canvas" style="border: none; overflow:hidden; margin-bottom: 0;" width="1024" height="768"></canvas>
+        <canvas id="canvas" style="border: none; overflow:hidden; margin-bottom: 0;" width="1433" height="768"></canvas>
     </div>
     <!-- FOOTER -->
     <footer class="text-center mt-0">

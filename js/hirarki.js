@@ -1149,20 +1149,19 @@ function initInputs() {
   });
   $('#wireframe').change(() => wireframe = !wireframe);
 
-  $('#ostrichBaseAngle').change((e) => ostrichBaseAngle = parseFloat(e.target.value) * Math.PI / 180);
-  $('#ostrichHeadAngle').change((e) => ostrichHeadAngle = parseFloat(e.target.value) * Math.PI / 180);
-  $('#ostrichWingAngle').change((e) => ostrichWingAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#ostrichBaseAngle').on('input', (e) => ostrichBaseAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#ostrichHeadAngle').on('input', (e) => ostrichHeadAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#ostrichWingAngle').on('input', (e) => ostrichWingAngle = parseFloat(e.target.value) * Math.PI / 180);
 
-  $('#baseGiraffeAngle').change((e) => baseGiraffeAngle = parseFloat(e.target.value) * Math.PI / 180);
-  $('#giraffeEarAngle').change((e) => giraffeEarAngle = parseFloat(e.target.value) * Math.PI / 180);
-  $('#giraffeTailAngle').change((e) => giraffeTailAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#baseGiraffeAngle').on('input', (e) => baseGiraffeAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#giraffeEarAngle').on('input', (e) => giraffeEarAngle = parseFloat(e.target.value) * Math.PI / 180);
+  
+  $('#baseLionAngle').on('input', (e) => baseLionAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#lionEarAngle').on('input', (e) => lionEarAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#lionTailAngle').on('input', (e) => lionTailAngle = parseFloat(e.target.value) * Math.PI / 180);
 
-  $('#baseLionAngle').change((e) => baseLionAngle = parseFloat(e.target.value) * Math.PI / 180);
-  $('#lionEarAngle').change((e) => lionEarAngle = parseFloat(e.target.value) * Math.PI / 180);
-  $('#lionTailAngle').change((e) => lionTailAngle = parseFloat(e.target.value) * Math.PI / 180);
-
-  $('#baseCubeAngle').change((e) => baseCubeAngle = parseFloat(e.target.value) * Math.PI / 180);
-  $('#baseBoxAngle').change((e) => baseBoxAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#baseCubeAngle').on('input', (e) => baseCubeAngle = parseFloat(e.target.value) * Math.PI / 180);
+  $('#baseBoxAngle').on('input', (e) => baseBoxAngle = parseFloat(e.target.value) * Math.PI / 180);
 
   $('#camera-select').change((e) => {
     if (e.target.value == 'default') {
